@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển MC - Quiz Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="flex justify-between items-center mb-8 pb-4 border-b border-slate-800">
+            <h1 class="text-3xl font-extrabold text-emerald-400">Bảng Điều Khiển Ban Tổ Chức</h1>
+            <div class="text-lg">Số người chơi online: <span id="player-count" class="font-bold text-emerald-400">0</span></div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 md:col-span-2">
+                <h2 id="current-q-title" class="text-xl font-bold mb-4 text-amber-400">Chưa bắt đầu trò chơi</h2>
+                <button id="start-btn" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3 rounded-xl transition shadow-lg">Phát Câu Hỏi Tiếp Theo</button>
+            </div>
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-center">
+                <div class="text-sm text-slate-400 mb-1">Trạng thái Game</div>
+                <div id="game-status-text" class="text-2xl font-bold text-blue-400">CHỜ BẮT ĐẦU</div>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+            <h3 class="text-lg font-bold mb-4">Kết Quả Vòng Vừa Qua / Top Sống Sót</h3>
+            <div id="summary-box" class="text-slate-400">Chưa có dữ liệu vòng đấu.</div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const playerCountEl = document.getElementById('player-count');
+        const startBtn = document.getElementById('start-btn');
+        const currentQTitle = document.getElementById('current-q-title');
+        const gameStatusText = document.getElementById('game-status-text');
+        const summaryBox = document.getElementById('summary-box');
+
+        socket.on('host:update-player-count', (count) => {
+            playerCountEl.textContent = count;
+        });
+
+        startBtn.addEventListener('click', () => {
+            socket.emit('host:start-next-question');
+            startBtn.disabled = true;
+            startBtn.classList.add('opacity-50');
+            gameStatusText.textContent = "ĐANG DIỄN RA (30s)";
+            currentQTitle.textContent = "Câu hỏi đang phát...";
+        });
+
+        socket.on('host:round-summary', (result) => {
+            startBtn.disabled = false;
+            startBtn.classList.remove('opacity-50');
+            gameStatusText.textContent = "ĐÃ KẾT THÚC VÒNG";
+
+            let html = `<p class="mb-2 font-semibold text-white">Số người sống sót: <span class="text-emerald-400">${result.survivorsCount}</span> (Hạn mức câu này: ${result.maxQuota}) | Bị loại: <span class="text-rose-400">${result.eliminatedCount}</span></p>`;
+            html += `<div class="max-h-60 overflow-y-auto space-y-1 mt-4">`;
+            result.survivorsList.forEach((p, idx) => {
+                html += `<div class="flex justify-between bg-slate-800 px-4 py-2 rounded-lg text-sm"><span>#${idx+1} ${p.name}</span> <span class="text-emerald-400 font-mono">${p.time}s</span></div>`;
+            });
+            html += `</div>`;
+            summaryBox.innerHTML = html;
+        });
+    </script>
+</body>
+</html>

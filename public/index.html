@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Trắc Nghiệm AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Màn hình nhập tên -->
+    <div id="login-screen" class="w-full max-w-md bg-slate-800 p-6 rounded-2xl shadow-xl text-center">
+        <h1 class="text-2xl font-bold mb-4 text-emerald-400">Tham Gia Trò Chơi</h1>
+        <input type="text" id="player-name" placeholder="Nhập họ tên của bạn..." class="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 focus:outline-none focus:border-emerald-400 mb-4 text-white">
+        <button id="join-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 font-bold py-3 rounded-lg transition">Vào Phòng Chơi</button>
+    </div>
+
+    <!-- Màn hình chờ / Chơi game -->
+    <div id="game-screen" class="w-full max-w-md hidden">
+        <div id="status-badge" class="text-center mb-4 py-1 px-3 rounded-full bg-blue-600 text-sm font-semibold inline-block">Đang kết nối...</div>
+        
+        <div id="question-container" class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-4">
+            <div class="flex justify-between text-sm text-slate-400 mb-2">
+                <span id="q-index">Câu hỏi 0/8</span>
+                <span id="timer" class="text-red-400 font-bold">30s</span>
+            </div>
+            <h2 id="q-text" class="text-lg font-semibold mb-6">Đang chờ MC phát câu hỏi...</h2>
+            
+            <div id="options-box" class="space-y-3">
+                <!-- Các nút đáp án được render bằng JS -->
+            </div>
+        </div>
+
+        <div id="notification" class="text-center text-lg font-medium text-amber-400"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        const loginScreen = document.getElementById('login-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const joinBtn = document.getElementById('join-btn');
+        const playerNameInput = document.getElementById('player-name');
+        const qIndexEl = document.getElementById('q-index');
+        const qTextEl = document.getElementById('q-text');
+        const optionsBox = document.getElementById('options-box');
+        const timerEl = document.getElementById('timer');
+        const statusBadge = document.getElementById('status-badge');
+        const notificationEl = document.getElementById('notification');
+
+        let countdownInterval = null;
+
+        joinBtn.addEventListener('click', () => {
+            const name = playerNameInput.value.trim();
+            if (!name) return alert('Vui lòng nhập tên của bạn!');
+            socket.emit('player:join', { name });
+        });
+
+        socket.on('player:joined', (data) => {
+            loginScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            statusBadge.textContent = "Trạng thái: Đang thi đấu (ACTIVE)";
+        });
+
+        socket.on('server:new-question', (data) => {
+            notificationEl.textContent = "";
+            qIndexEl.textContent = `Câu hỏi ${data.index + 1}/${data.totalQuestions}`;
+            qTextEl.textContent = data.question;
+            optionsBox.innerHTML = "";
+
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.textContent = `${String.fromCharCode(65 + idx)}. ${opt}`;
+                btn.className = "w-full text-left p-4 rounded-xl bg-slate-700 hover:bg-slate-600 transition font-medium border border-slate-600";
+                btn.onclick = () => {
+                    // Khoá các nút sau khi chọn
+                    Array.from(optionsBox.children).forEach(b => b.disabled = true);
+                    btn.classList.add('bg-emerald-600', 'border-emerald-400');
+                    socket.emit('player:submit-answer', { selectedOption: idx });
+                };
+                optionsBox.appendChild(btn);
+            });
+
+            // Đồng hồ đếm ngược 30 giây
+            let timeLeft = data.duration;
+            timerEl.textContent = `${timeLeft}s`;
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `${timeLeft}s`;
+                if (timeLeft <= 0) clearInterval(countdownInterval);
+            }, 1000);
+        });
+
+        socket.on('player:answer-ack', (res) => {
+            notificationEl.textContent = "Đã gửi đáp án! Đang chờ kết quả...";
+        });
+
+        socket.on('server:round-result', (data) => {
+            clearInterval(countdownInterval);
+            if (data.status === 'ACTIVE') {
+                statusBadge.textContent = "Trạng thái: An toàn (Vào vòng trong)";
+                statusBadge.className = "text-center mb-4 py-1 px-3 rounded-full bg-emerald-600 text-sm font-semibold inline-block";
+                notificationEl.textContent = data.isCorrect ? "Bạn trả lời ĐÚNG!" : "Bạn trả lời SAI nhưng vẫn đủ điều kiện đi tiếp!";
+            } else {
+                statusBadge.textContent = "Trạng thái: Chế độ theo dõi (Spectator)";
+                statusBadge.className = "text-center mb-4 py-1 px-3 rounded-full bg-rose-600 text-sm font-semibold inline-block";
+                notificationEl.textContent = "Bạn đã bị loại khỏi vòng thi đấu chính thức. Hãy tiếp tục theo dõi nhé!";
+                Array.from(optionsBox.children).forEach(b => b.disabled = true);
+            }
+        });
+
+        socket.on('game:over', (data) => {
+            notificationEl.textContent = "Trò chơi kết thúc! Chúc mừng các Quán quân!";
+        });
+    </script>
+</body>
+</html>

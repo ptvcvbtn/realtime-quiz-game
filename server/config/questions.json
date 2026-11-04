@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "question": "AI là viết tắt của từ nào sau đây?",
+    "options": ["Automated Intelligence", "Artificial Intelligence", "Artificial Integration", "Advanced Information"],
+    "correct": 1
+  },
+  {
+    "id": 2,
+    "question": "Mô hình ngôn ngữ lớn (LLM) như ChatGPT dựa trên kiến trúc mạng nơ-ron nào?",
+    "options": ["CNN", "RNN", "Transformer", "GAN"],
+    "correct": 2
+  },
+  {
+    "id": 3,
+    "question": "Thuật ngữ 'Machine Learning' lần đầu tiên được đưa ra bởi ai?",
+    "options": ["Alan Turing", "Arthur Samuel", "Geoffrey Hinton", "Yann LeCun"],
+    "correct": 1
+  },
+  {
+    "id": 4,
+    "question": "Thuật toán nào thường được dùng trong bài toán phân loại (Classification)?",
+    "options": ["Logistic Regression", "K-Means", "PCA", "Linear Regression"],
+    "correct": 0
+  },
+  {
+    "id": 5,
+    "question": "Đâu là tên thư viện học sâu (Deep Learning) phổ biến do Google phát triển?",
+    "options": ["PyTorch", "TensorFlow", "Scikit-learn", "Pandas"],
+    "correct": 1
+  },
+  {
+    "id": 6,
+    "question": "Khái niệm 'Overfitting' trong AI có nghĩa là gì?",
+    "options": ["Mô hình chạy quá chậm", "Mô hình quá tốt trên tập train nhưng kém trên tập test", "Mô hình thiếu dữ liệu huấn luyện", "Mô hình không thể hội tụ"],
+    "correct": 1
+  },
+  {
+    "id": 7,
+    "question": "Thử nghiệm dùng để đánh giá xem máy tính có khả năng thể hiện trí thông minh như con người hay không gọi là gì?",
+    "options": ["Voight-Kampff Test", "Turing Test", "Imitation Challenge", "Ai-Q Test"],
+    "correct": 1
+  },
+  {
+    "id": 8,
+    "question": "Phương pháp huấn luyện AI dựa trên cơ chế 'Thưởng - Phạt' qua tương tác với môi trường gọi là gì?",
+    "options": ["Supervised Learning", "Unsupervised Learning", "Reinforcement Learning", "Self-Supervised Learning"],
+    "correct": 2
+  }
+]
